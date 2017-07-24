@@ -1,0 +1,410 @@
+<html lang="en" ng-app="app">
+<head>
+	<title>Word Tile Solver</title>
+	<link rel="icon" href="word.ico">
+	<meta charset="utf-8"> 
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<!-- <link rel="stylesheet" type="text/css" href="style.css"> -->
+<!-- 	<link rel="stylesheet" href="css/animate.css">
+	<link rel="stylesheet" href="css/ihover.min.css"> -->
+	<script src="js/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/angular.min.js"></script>
+	<script src="words.js"></script>
+	<style>
+	.letter{
+		font-size: 4vw;
+		text-align: center;
+		cursor: pointer;
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none; /* Safari */
+		-khtml-user-select: none; /* Konqueror HTML */
+		-moz-user-select: none; /* Firefox */
+		-ms-user-select: none; /* Internet Explorer/Edge */
+	            user-select: none; /* Non-prefixed version, currently
+	            supported by Chrome and Opera */
+	}
+	.popupletter{
+		font-size: 2vw;
+		text-align: center;
+		cursor: pointer;
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none; /* Safari */
+		-khtml-user-select: none; /* Konqueror HTML */
+		-moz-user-select: none; /* Firefox */
+		-ms-user-select: none; /* Internet Explorer/Edge */
+	            user-select: none; /* Non-prefixed version, currently
+	            supported by Chrome and Opera */
+	}
+	.maintiles{
+		margin-top: 3vw;
+		border-radius: 25px;
+    	width: 25%;
+    	border-style: solid;
+	}
+	.alphatiles{
+		margin-top: 1.5vw;
+		border-radius: 25px;
+    	width: 40%;
+	}
+	.clickable{
+		cursor: pointer;
+		font-size: 2vw;
+		font-family: Lucida Sans Typewriter;
+		text-align: center;
+		padding: 5px;
+	}
+	.clickable:hover{
+		color: gray;
+	}
+	.noselect {
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none; /* Safari */
+		-khtml-user-select: none; /* Konqueror HTML */
+		-moz-user-select: none; /* Firefox */
+		-ms-user-select: none; /* Internet Explorer/Edge */
+	            user-select: none; /* Non-prefixed version, currently
+	            supported by Chrome and Opera */
+	}
+	h1{
+		font-family: Lucida Sans Typewriter;
+		text-align: center;
+		cursor: default;
+	}
+	h5{
+		font-family: Lucida Sans Typewriter;
+		text-align: center;
+		cursor: default;
+	}
+	</style>
+	<script>
+	var app = angular.module('app', []);
+	app.controller("ctrl", function($scope){
+		$scope.currentRowIndex = 0;
+		$scope.currentColumnIndex = 0;
+		$scope.tiles = [ ["A","B","C"] , ["D","E","F"] , ["G","H","I"]  ];
+
+		$scope.getNeighbours = function(node){
+			var returnList = [];
+			if($scope.inBound(node.row - 1, node.col - 1)){
+				returnList.push({row: node.row - 1, col: node.col - 1});
+			}
+			if($scope.inBound(node.row - 1, node.col)){
+				returnList.push({row: node.row - 1, col: node.col});
+			}
+			if($scope.inBound(node.row - 1, node.col + 1)){
+				returnList.push({row: node.row - 1, col: node.col + 1});
+			}
+
+			if($scope.inBound(node.row, node.col - 1)){
+				returnList.push({row: node.row, col: node.col - 1});
+			}
+			if($scope.inBound(node.row, node.col + 1)){
+				returnList.push({row: node.row, col: node.col + 1});
+			}
+
+			if($scope.inBound(node.row + 1, node.col - 1)){
+				returnList.push({row: node.row + 1, col: node.col - 1});
+			}
+			if($scope.inBound(node.row + 1, node.col)){
+				returnList.push({row: node.row + 1, col: node.col});
+			}
+			if($scope.inBound(node.row + 1, node.col + 1)){
+				returnList.push({row: node.row + 1, col: node.col + 1});
+			}
+		 	return returnList;
+		}
+
+		$scope.inBound = function(row, col){
+			if(row > $scope.tiles.length - 1 || row < 0){
+				return false;
+			}
+			if(col > $scope.tiles.length - 1 || col < 0){
+				return false;
+			}
+			return true;
+		}
+
+		$scope.inArray = function(list, element){
+			for (var i = 0; i < list.length; i++) {
+				if(JSON.stringify(list[i]) === JSON.stringify(element)){
+					return true;
+				}
+			}
+			return false;
+		}
+
+		$scope.getCombinations = function(startNode){
+			finalList = [];
+			array = [];
+			array.push(startNode);
+			queue = [];
+			queue.push(array);
+			while (queue.length != 0){
+				var curr = queue.shift();
+				var lastElement = curr[curr.length - 1];
+				var neighbours = $scope.getNeighbours(lastElement);
+				var deadEnd = true;
+				for (var i = 0; i < neighbours.length; i++) {
+					if(!$scope.inArray(curr, neighbours[i])){
+						deadEnd = false;
+						var newWord = curr.slice();
+						newWord.push(neighbours[i]);
+						queue.push(newWord);
+					}
+				}
+				if(deadEnd){
+					finalList.push(curr);
+				}
+			}
+			//console.log(finalList);
+			return finalList;
+		}
+
+		$scope.getString = function(results){
+			var stringArray = [];
+			for(var i = 0; i < results.length; i++){
+				var str = "";
+				for(var j = 0; j < results[i].length; j++){
+					var x = results[i][j].row;
+					var y = results[i][j].col;
+					var chr = $scope.tiles[x][y];
+					str += chr;
+				}
+				stringArray.push(str);
+			}
+			return stringArray;
+		}
+
+		$scope.getAllWords = function(){
+			var finalList = [];
+			for(var i = 0; i < $scope.tiles.length; i++){
+				for(var j = 0; j < $scope.tiles.length; j++){
+					var obj = {row: i, col: j};
+					var result = $scope.getCombinations(obj);
+					finalList.push.apply(finalList, result);
+				}
+			}
+			var list = $scope.getString(finalList);
+			var substringList = $scope.getAllSubWords(list);
+			var nonDupeList = $scope.removeDuplicates(substringList);
+			var filteredList = $scope.filterWords(nonDupeList);
+			console.log(filteredList);
+			//return filteredList;
+		}
+
+		$scope.removeDuplicates = function(list){
+		    var seen = {};
+		    var out = [];
+		    var len = list.length;
+		    var j = 0;
+		    for(var i = 0; i < len; i++) {
+		         var item = list[i];
+		         if(seen[item] !== 1 && item.length > 1) {
+		               seen[item] = 1;
+		               out[j++] = item;
+		         }
+		    }
+		    return out;
+		}
+
+		$scope.getAllSubWords = function(wordList){
+			substringList = [];
+			var str;
+			for(var w = 0; w < wordList.length; w++){
+				str = String(wordList[w]);
+				for (i = 0; i < str.length; i++) {
+				    for (j = i + 1; j < str.length + 1; j++) {
+				    	var substr = str.slice(i, j);
+				        substringList.push(substr);
+				    }
+				}
+			}
+			return substringList;
+		}
+
+		//$scope.getAllSubWords(["BobbyJoe", "McDicks"]);
+
+		$scope.filterWords = function(wordList){
+			filteredList = [];
+			for(var i = 0; i < wordList.length; i++){
+				if($.inArray(wordList[i].toLowerCase(), dictionary) > 0){
+					filteredList.push(wordList[i]);
+				}
+			}
+			return filteredList;
+		}
+	});	
+	</script>
+</head>
+
+<body style="background-color: #e8e1b0">
+<h1 class="noselect">Word Tile Solver</h1>
+<h5 class="noselect">A Web Project by Jason</h5>
+<div id="tt" ng-controller="ctrl" class="container maintiles" align="center">
+	<div class="row">
+		<div class="col-xs-4" align="center">
+			<span id="w1" class="letter" ng-bind="tiles[0][0]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w2" class="letter" ng-bind="tiles[0][1]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w3" class="letter" ng-bind="tiles[0][2]"></span>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-4" align="center">
+			<span id="w4" class="letter" ng-bind="tiles[1][0]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w5" class="letter" ng-bind="tiles[1][1]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w6" class="letter" ng-bind="tiles[1][2]"></span>
+		</div>
+	</div>	
+	<div class="row">
+		<div class="col-xs-4" align="center">
+			<span id="w7" class="letter" ng-bind="tiles[2][0]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w8" class="letter" ng-bind="tiles[2][1]"></span>
+		</div>
+		<div class="col-xs-4" align="center">
+			<span id="w9" class="letter" ng-bind="tiles[2][2]"></span>
+		</div>
+	</div>			
+</div>
+
+<div class="row" style="width: 30%; margin: auto;">
+	<div class="col-xs-6" style="text-align: center;">
+		<span class="clickable noselect" onclick="generateRandomWords()">Random</span>
+	</div>
+	<div class="col-xs-6" style="text-align: center;">
+		<span class="clickable noselect" onclick="solve()">Solve</span>
+	</div>
+</div>
+
+
+
+<div id="popup" class="container alphatiles" align="center">
+	<div class="row">
+		<div class="col-xs-2" align="center"><span id="a" class="popupletter">A</span></div>
+		<div class="col-xs-2" align="center"><span id="b" class="popupletter">B</span></div>
+		<div class="col-xs-2" align="center"><span id="c" class="popupletter">C</span></div>
+		<div class="col-xs-2" align="center"><span id="d" class="popupletter">D</span></div>
+		<div class="col-xs-2" align="center"><span id="e" class="popupletter">E</span></div>
+		<div class="col-xs-2" align="center"><span id="f" class="popupletter">F</span></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-2" align="center"><span id="g" class="popupletter">G</span></div>
+		<div class="col-xs-2" align="center"><span id="h" class="popupletter">H</span></div>
+		<div class="col-xs-2" align="center"><span id="i" class="popupletter">I</span></div>
+		<div class="col-xs-2" align="center"><span id="j" class="popupletter">J</span></div>
+		<div class="col-xs-2" align="center"><span id="k" class="popupletter">K</span></div>
+		<div class="col-xs-2" align="center"><span id="l" class="popupletter">L</span></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-2" align="center"><span id="m" class="popupletter">M</span></div>
+		<div class="col-xs-2" align="center"><span id="n" class="popupletter">N</span></div>
+		<div class="col-xs-2" align="center"><span id="o" class="popupletter">O</span></div>
+		<div class="col-xs-2" align="center"><span id="p" class="popupletter">P</span></div>
+		<div class="col-xs-2" align="center"><span id="q" class="popupletter">Q</span></div>
+		<div class="col-xs-2" align="center"><span id="r" class="popupletter">R</span></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-2" align="center"><span id="s" class="popupletter">S</span></div>
+		<div class="col-xs-2" align="center"><span id="t" class="popupletter">T</span></div>
+		<div class="col-xs-2" align="center"><span id="u" class="popupletter">U</span></div>
+		<div class="col-xs-2" align="center"><span id="v" class="popupletter">V</span></div>
+		<div class="col-xs-2" align="center"><span id="w" class="popupletter">W</span></div>
+		<div class="col-xs-2" align="center"><span id="x" class="popupletter">X</span></div>
+	</div>	
+	<div class="row">
+		<div class="col-xs-2" align="center"><span id="y" class="popupletter">Y</span></div>
+		<div class="col-xs-2" align="center"><span id="z" class="popupletter">Z</span></div>
+	</div>			
+</div>
+
+
+<script>
+	$("#popup").hide();
+	$( "#w1" ).click(function() {selectLetter("0", "0");});
+	$( "#w2" ).click(function() {selectLetter("0", "1");});
+	$( "#w3" ).click(function() {selectLetter("0", "2");});
+	$( "#w4" ).click(function() {selectLetter("1", "0");});
+	$( "#w5" ).click(function() {selectLetter("1", "1");});
+	$( "#w6" ).click(function() {selectLetter("1", "2");});
+	$( "#w7" ).click(function() {selectLetter("2", "0");});
+	$( "#w8" ).click(function() {selectLetter("2", "1");});
+	$( "#w9" ).click(function() {selectLetter("2", "2");});
+
+	$( "#a" ).click(function() {changeLetter("A");});
+	$( "#b" ).click(function() {changeLetter("B");});
+	$( "#c" ).click(function() {changeLetter("C");});
+	$( "#d" ).click(function() {changeLetter("D");});
+	$( "#e" ).click(function() {changeLetter("E");});
+	$( "#f" ).click(function() {changeLetter("F");});
+	$( "#g" ).click(function() {changeLetter("G");});
+	$( "#h" ).click(function() {changeLetter("H");});
+	$( "#i" ).click(function() {changeLetter("I");});
+	$( "#j" ).click(function() {changeLetter("J");});
+	$( "#k" ).click(function() {changeLetter("K");});
+	$( "#l" ).click(function() {changeLetter("L");});
+	$( "#m" ).click(function() {changeLetter("M");});
+	$( "#n" ).click(function() {changeLetter("N");});
+	$( "#o" ).click(function() {changeLetter("O");});
+	$( "#p" ).click(function() {changeLetter("P");});
+	$( "#q" ).click(function() {changeLetter("Q");});
+	$( "#r" ).click(function() {changeLetter("R");});
+	$( "#s" ).click(function() {changeLetter("S");});
+	$( "#t" ).click(function() {changeLetter("T");});
+	$( "#u" ).click(function() {changeLetter("U");});
+	$( "#v" ).click(function() {changeLetter("V");});
+	$( "#w" ).click(function() {changeLetter("W");});
+	$( "#x" ).click(function() {changeLetter("X");});
+	$( "#y" ).click(function() {changeLetter("Y");});
+	$( "#z" ).click(function() {changeLetter("Z");});
+
+	function selectLetter(row, col){
+		var dv = angular.element(document.getElementById("tt")).scope();
+	    dv.currentRowIndex = row;
+	    dv.currentColumnIndex = col;
+	    dv.$apply();
+		$("#popup").fadeIn(500);
+	}
+
+	function changeLetter(letterid){
+		var dv = angular.element(document.getElementById("tt")).scope();
+	    dv.tiles[dv.currentRowIndex][dv.currentColumnIndex] = letterid;
+	    dv.$apply();
+		$("#popup").fadeOut(500);
+	}
+
+	function generateRandomWords(){
+		var dv = angular.element(document.getElementById("tt")).scope();
+		var vowels = "AEIOU";
+		var possible = "BCDFGHJKLMNPQRSTVWXYZ";
+		for(var i = 0; i < dv.tiles.length; i++){
+			for(var j = 0; j < dv.tiles.length; j++){
+				var RNG = Math.floor(Math.random() * 3) + 1;
+				if(RNG == 1){
+					dv.tiles[i][j] = vowels.charAt(Math.floor(Math.random() * vowels.length));
+				}
+				else{
+					dv.tiles[i][j] = possible.charAt(Math.floor(Math.random() * possible.length));
+				}	
+			}
+		}
+		dv.$apply();		
+	}
+
+	function solve(){
+		var dv = angular.element(document.getElementById("tt")).scope();
+		dv.getAllWords();
+	}
+	</script>
+
+</body>
+</html>
